@@ -1,0 +1,19 @@
+version: '3'
+services:
+  bionic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PASSWORD: "docker"
+    devices:
+      - /dev/snd
+    container_name: bionic
+    privileged: true
+    volumes:
+      - '${HOME}/samba:/home/docker/samba'
+      - '${HOME}/.config/pulse:/home/docker/.config/pulse'
+    ports:
+      - "12321:22"
+      - "23432:80"
+      - "8080:8080"
