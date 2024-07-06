@@ -34,4 +34,7 @@ sudo usermod -aG docker $USER
 sudo chmod 660 /var/run/docker.sock
 sudo chown root:docker /var/run/docker.sock
 sudo systemctl start docker
+
+### Reboot of start a new session as below:
+su - $USER
 ```
