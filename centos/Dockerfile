@@ -21,6 +21,7 @@ RUN yum -y update && \
     pulseaudio-libs-devel \
     pulseaudio \
     pulseaudio-utils \
+    pavucontrol \
     && yum clean all
 RUN rm -rf /var/cache/yum/* /tmp/* /var/tmp/*
 

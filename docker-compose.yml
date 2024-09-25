@@ -6,13 +6,11 @@ services:
       dockerfile: Dockerfile
       args:
         PASSWORD: "docker"
-    devices:
-      - /dev/snd
     container_name: bionic
     privileged: true
     volumes:
       - '${HOME}/share_docker:/home/docker/share_docker'
-      - '${HOME}/.config/pulse:/home/docker/.config/pulse'
+      - '${HOME}/.config/pulse:/root/.config/pulse'
     ports:
       - "12321:22"
       - "12322:80"
@@ -24,13 +22,11 @@ services:
       dockerfile: Dockerfile
       args:
         PASSWORD: "docker"
-    devices:
-      - /dev/snd
     container_name: centos
     privileged: true
     volumes:
       - '${HOME}/share_docker:/home/docker/share_docker'
-      - '${HOME}/.config/pulse:/home/docker/.config/pulse'
+      - '${HOME}/.config/pulse:/root/.config/pulse'
     ports:
       - "23432:22"
       - "23433:80"

@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     libasound2-plugins \
     pulseaudio \
     pulseaudio-utils \
+    pavucontrol \
     curl \
     ffmpeg \
     sox \
