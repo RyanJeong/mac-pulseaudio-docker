@@ -73,8 +73,8 @@ ssh docker@127.0.0.1 -p12321
 * Can't read audio data on the Docker container
 
 ```shell
-pulseaudio --kill
-pulseaudio --start --load="module-native-protocol-tcp" --exit-idle-time=-1
+pulseaudio --kill && \
+  pulseaudio --start --load="module-native-protocol-tcp" --exit-idle-time=-1
 ```
 
 * `PermissionError: [Errno 13] Permission denied`

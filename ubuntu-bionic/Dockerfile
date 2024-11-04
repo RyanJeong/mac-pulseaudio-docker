@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     vim \
     make \
     git \
+    zip \
     bc \
     unzip \
     libpulse-dev \
