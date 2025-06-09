@@ -26,7 +26,13 @@ load-module module-esound-protocol-tcp auth-ip-acl=127.0.0.1
 ```shell
 pulseaudio --kill
 pulseaudio --start --load="module-native-protocol-tcp" --exit-idle-time=-1
-ps aux | grep pulseaudio  # verify pulseaudio is running
+```
+
+Verify PulseAudio is running:
+
+```bash
+ps aux | grep pulseaudio | grep -v "grep" && \
+  if [[ $? != 0 ]]; then echo "PulseAudio is not running."; fi
 ```
 
 4. Configure Docker to Access PulseAudio
@@ -37,7 +43,7 @@ docker run -it \
   --device /dev/snd \
   -e PULSE_SERVER=host.docker.internal \
   -v ~/.config/pulse/cookie:/root/.config/pulse/cookie \
-  your_image_name
+  <YOUR_IMAGE_NAME>
 ```
 
 5. Test the connection from the Docker Container
