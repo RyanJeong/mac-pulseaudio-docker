@@ -18,11 +18,11 @@ services:
 
   centos:
     build:
-      context: ./centos
+      context: ./rocky-blue-onyx
       dockerfile: Dockerfile
       args:
         PASSWORD: "docker"
-    container_name: centos
+    container_name: blue-onyx
     privileged: true
     volumes:
       - '${HOME}/share_docker:/home/docker/share_docker'
