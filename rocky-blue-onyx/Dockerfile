@@ -1,12 +1,8 @@
-FROM centos:latest
+FROM rockylinux:8
 
 LABEL maintainer="Munseong Jeong <ryan.m.jeong@hotmail.com>"
 
 ARG PASSWORD
-
-RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
-RUN sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
-  /etc/yum.repos.d/CentOS-Linux-*
 
 RUN yum -y update && \
     yum -y install \
@@ -14,6 +10,7 @@ RUN yum -y update && \
     unzip \
     curl \
     wget \
+    findutils \
     git \
     gcc \
     gcc-c++ \
