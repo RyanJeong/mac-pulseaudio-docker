@@ -8,13 +8,16 @@ services:
         PASSWORD: "docker"
     container_name: bionic
     privileged: true
+    environment:
+      - PULSE_SERVER=host.docker.internal
     volumes:
-      - '${HOME}/share_docker:/home/docker/share_docker'
-      - '${HOME}/.config/pulse:/root/.config/pulse'
+      - ${HOME}/share_docker:/home/docker/share_docker
+      - ~/.config/pulse/cookie:/home/audio/.config/pulse/cookie:ro
     ports:
       - "12321:22"
       - "12322:80"
       - "12323:8080"
+    user: "1000:1000"
 
   centos:
     build:
@@ -24,10 +27,13 @@ services:
         PASSWORD: "docker"
     container_name: blue-onyx
     privileged: true
+    environment:
+      - PULSE_SERVER=host.docker.internal
     volumes:
-      - '${HOME}/share_docker:/home/docker/share_docker'
-      - '${HOME}/.config/pulse:/root/.config/pulse'
+      - ${HOME}/share_docker:/home/docker/share_docker
+      - ~/.config/pulse/cookie:/home/audio/.config/pulse/cookie:ro
     ports:
       - "23432:22"
       - "23433:80"
       - "23434:8080"
+    user: "1000:1000"

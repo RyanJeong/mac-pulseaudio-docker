@@ -28,13 +28,11 @@ RUN mkdir -p /run/sshd
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-RUN useradd -d /home/docker -m docker
+RUN useradd -m -u 1000 -s /bin/bash -d /home/docker docker
 RUN echo "docker:$PASSWORD" | chpasswd
 RUN usermod -aG wheel docker
 
 RUN sed -i 's:/bin/sh:/bin/bash:g' /etc/passwd
-
-ENV PULSE_SERVER=host.docker.internal
 
 CMD ["/usr/sbin/sshd", "-D"]
 
