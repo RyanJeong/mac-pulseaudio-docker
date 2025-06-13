@@ -1,100 +1,113 @@
-# Dockerfile
+# Mac-pulseaudio-docker
 
-Dockerfile for Utilizing MacBook Microphone Inside Docker Container
+This repository enables access to the MacBook's microphone within Docker containers using PulseAudio.
 
 ## Prerequisites
 
-### Install PulseAudio
+### 1. Install PulseAudio
 
 ```bash
 brew install pulseaudio
+```
+
+### 2. Create a Directory for Sharing Between Mac and Containers
+
+```bash
 mkdir -p $HOME/share_docker
 ```
 
 ## How to Run
 
-1. Terminate PulseAudio process on the host side.
+### 1. Terminate Existing PulseAudio Daemon and Start a New Instance for Audio Bridging
 
-```shell
+```bash
 for i in {1..10}; do
   pulseaudio --kill
   sleep 0.5
   if ! pgrep -x pulseaudio > /dev/null; then
     echo "PulseAudio terminated."
-    break
+
+    pulseaudio \
+      --daemonize=no \
+      --log-level=debug \
+      --exit-idle-time=-1 \
+      --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12 auth-anonymous=1"
   fi
 done
-
-pulseaudio \
-    --daemonize=no \
-    --log-level=debug \
-    --exit-idle-time=-1 \
-    --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12 auth-anonymous=1"
 ```
 
-2. Open a terminal and run the following command:
+> **Note:** Keep this terminal open while the container is using the host's microphone.
 
-```shell
-pulseaudio \
-    --daemonize=no \
-    --log-level=debug \
-    --exit-idle-time=-1 \
-    --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12 auth-anonymous=1"
+---
+
+### 2. Open a New Terminal and Verify PulseAudio Is Running
+
+```bash
+lsof -i :4713
 ```
 
-3. Open another terminal and build docker files using `docker-compose`.
+---
 
-```shell
+### 3. Build and Run Docker Containers
+
+```bash
 docker-compose up -d --build
 ```
 
-If you need to build entirely without cache, run the following commands:
+To rebuild from scratch (without cache), run:
 
-```shell
+```bash
 docker-compose build --no-cache
 docker-compose up -d
 ```
 
-4. Check the PulseAudio is running before access a docker container.
+---
 
-```shell
-lsof -i :4713
-```
+### 4. Access the Docker Container
 
-5. Access a docker container.
+#### Ubuntu
 
-```shell
+```bash
 docker exec --user docker -it bionic bash
 ```
 
-```shell
+#### Rocky
+
+```bash
 docker exec --user docker -it blue-onyx bash
 ```
 
-6. In the docker container, check whether a `env` is defined properly:
+---
 
-```shell
+### 5. Verify PulseAudio Environment Variable in the Container
+
+```bash
 echo $PULSE_SERVER
 ```
 
-7. Test whether the host microphone is passing to the container side well.
+---
 
-```shell
+### 6. Test Microphone Input from Host Inside Container
+
+```bash
 parec --format=s16le --rate=44100 --channels=1 2>/dev/null \
-    | sox -t raw -r 44100 -e signed -b 16 -c 1 - output.wav trim 0 5
+  | sox -t raw -r 44100 -e signed -b 16 -c 1 - output.wav trim 0 5
 ```
+
+---
 
 ## References
 
 * [ALSA or Pulseaudio sound in docker container](https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio)
 
-## Appendix A. Change Default Port Number of PulseAudio
+---
 
-You can change the port number to others if you need. The following command sets the port number to `4714`.
+## Appendix A: Change the Default Port of PulseAudio
 
-```shell
+You can change the PulseAudio TCP port if necessary. For example, to use port `4714`:
+
+```bash
 pulseaudio --daemonize=no --log-level=debug \
   --exit-idle-time=-1 \
   --load="module-native-protocol-tcp port=4714 auth-ip-acl=127.0.0.1;172.16.0.0/12 auth-anonymous=1"
 ```
-
