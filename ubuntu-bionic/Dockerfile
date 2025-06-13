@@ -4,11 +4,14 @@ LABEL maintainer="Munseong Jeong <ryan.m.jeong@hotmail.com>"
 
 ARG PASSWORD
 
-RUN sed -i 's/kr.archive.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list
-RUN sed -i 's/archive.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list
-RUN sed -i 's/security.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list
+# Faster mirror for Korea
+RUN sed -i 's/kr.archive.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list && \
+    sed -i 's/archive.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y \
+# Package installation
+RUN apt-get update && \
+    apt-get install -y \
     sudo \
     vim \
     make \
@@ -36,20 +39,30 @@ RUN apt-get update && apt-get install -y \
     python3.8-dev \
     python3-pip \
     openssh-server \
-    iproute2
-RUN apt-get clean && \
+    iproute2 && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN mkdir -p /run/sshd
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
-RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# Ensure /etc/ssh exists and generate host keys (no overwrite if exists)
+RUN mkdir -p /etc/ssh && \
+    [ -f /etc/ssh/ssh_host_rsa_key     ] || ssh-keygen -q -t rsa     -b 4096 -f /etc/ssh/ssh_host_rsa_key     -N "" && \
+    [ -f /etc/ssh/ssh_host_ecdsa_key   ] || ssh-keygen -q -t ecdsa   -b 521  -f /etc/ssh/ssh_host_ecdsa_key   -N "" && \
+    [ -f /etc/ssh/ssh_host_ed25519_key ] || ssh-keygen -q -t ed25519        -f /etc/ssh/ssh_host_ed25519_key -N "" && \
+    chmod 600 /etc/ssh/ssh_host_* && chown root:root /etc/ssh/ssh_host_*
 
-RUN useradd -m -u 1000 -s /bin/bash -d /home/docker docker
-RUN echo "docker:$PASSWORD" | chpasswd
-RUN usermod -aG sudo docker
+# SSH daemon config
+RUN mkdir -p /run/sshd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-RUN sed -i 's:/bin/sh:/bin/bash:g' /etc/passwd
+# Add default user with sudo access
+RUN useradd -m -u 1000 -s /bin/bash -d /home/docker docker && \
+    echo "docker:$PASSWORD" | chpasswd && \
+    usermod -aG sudo docker
 
+# Set default working directory
+WORKDIR /home/docker
+
+# Start SSH daemon in foreground
 CMD ["/usr/sbin/sshd", "-D"]
 
-WORKDIR /home/docker
