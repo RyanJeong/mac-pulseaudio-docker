@@ -1,4 +1,3 @@
-version: '3'
 services:
   bionic:
     build:
@@ -8,15 +7,16 @@ services:
         PASSWORD: "docker"
     container_name: bionic
     privileged: true
+    environment:
+      - PULSE_SERVER=host.docker.internal:4713
     volumes:
-      - '${HOME}/share_docker:/home/docker/share_docker'
-      - '${HOME}/.config/pulse:/root/.config/pulse'
+      - ${HOME}/share_docker:/home/docker/share_docker
     ports:
       - "12321:22"
       - "12322:80"
       - "12323:8080"
 
-  centos:
+  blue-onyx:
     build:
       context: ./rocky-blue-onyx
       dockerfile: Dockerfile
@@ -24,9 +24,10 @@ services:
         PASSWORD: "docker"
     container_name: blue-onyx
     privileged: true
+    environment:
+      - PULSE_SERVER=host.docker.internal:4713
     volumes:
-      - '${HOME}/share_docker:/home/docker/share_docker'
-      - '${HOME}/.config/pulse:/root/.config/pulse'
+      - ${HOME}/share_docker:/home/docker/share_docker
     ports:
       - "23432:22"
       - "23433:80"

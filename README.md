@@ -1,96 +1,115 @@
-# Dockerfile
+# Mac-pulseaudio-docker
 
-## How to Access the Host's Microphone on Docker Conatiners
+This repository enables access to the MacBook's microphone within Docker containers using PulseAudio.
 
-1. Install PulseAudio using Homebrew
+## Prerequisites
 
-```sh
+### 1. Install PulseAudio
+
+```bash
 brew install pulseaudio
 ```
 
-2. Configure PulseAudio
-
-Edit (or create) the configuration file located at `/usr/local/etc/pulse/default.pa` and add the following lines:
-
-```shell
-find / -name default.pa 2>/dev/null
-```
-
-```shell
-load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
-load-module module-esound-protocol-tcp auth-ip-acl=127.0.0.1
-```
-
-3. Start PulseAudio Daemon
-
-```shell
-pulseaudio --kill
-pulseaudio --start --load="module-native-protocol-tcp" --exit-idle-time=-1
-```
-
-Verify PulseAudio is running:
+### 2. Create a Directory for Sharing Between Mac and Containers
 
 ```bash
-ps aux | grep pulseaudio | grep -v "grep" && \
-  if [[ $? != 0 ]]; then echo "PulseAudio is not running."; fi
-```
-
-4. Configure Docker to Access PulseAudio
-
-```shell
-# example
-docker run -it \
-  --device /dev/snd \
-  -e PULSE_SERVER=host.docker.internal \
-  -v ~/.config/pulse/cookie:/root/.config/pulse/cookie \
-  <YOUR_IMAGE_NAME>
-```
-
-5. Test the connection from the Docker Container
-
-```shell
-pactl info
+mkdir -p $HOME/share_docker
 ```
 
 ## How to Run
 
-```shell
-docker-compose build
-docker-compose up -d
-docker-compose ls -a
-docker-compose down
+### 1. Terminate Existing PulseAudio Daemon and Start a New Instance for Audio Bridging
+
+```bash
+for i in {1..10}; do
+  pulseaudio --kill
+  sleep 0.5
+  if ! pgrep -x pulseaudio > /dev/null; then
+    echo "PulseAudio terminated."
+
+    pulseaudio \
+      --daemonize=no \
+      --log-level=debug \
+      --exit-idle-time=-1 \
+      --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.16.0.0/12 auth-anonymous=1"
+  fi
+done
 ```
 
-## How to Access Docker Containers Using SSH
+> **Note:** Keep this terminal open while the container is using the host's microphone.
 
-```shell
-ssh docker@127.0.0.1 -p<PORT>
-```
+---
 
-```shell
-### e.g.
-ssh docker@127.0.0.1 -p12321
+### 2. Open a New Terminal and Verify PulseAudio Is Running
+
+```bash
+lsof -i :4713
 ```
 
 ---
 
-## Troubleshooting
+### 3. Build and Run Docker Containers
 
-* Can't read audio data on the Docker container
-
-```shell
-pulseaudio --kill && \
-  pulseaudio --start --load="module-native-protocol-tcp" --exit-idle-time=-1
+```bash
+docker-compose up -d --build
 ```
 
-* `PermissionError: [Errno 13] Permission denied`
+To rebuild from scratch (without cache), run:
 
-```sh
-sudo usermod -aG docker $USER
-sudo chmod 660 /var/run/docker.sock
-sudo chown root:docker /var/run/docker.sock
-sudo systemctl start docker
+```bash
+docker-compose build --no-cache
+docker-compose up -d
+```
 
-### Reboot of start a new session as below:
-su - $USER
+---
+
+### 4. Access the Docker Container
+
+#### Ubuntu
+
+```bash
+docker exec --user docker -it bionic bash
+```
+
+#### Rocky
+
+```bash
+docker exec --user docker -it blue-onyx bash
+```
+
+---
+
+### 5. Verify PulseAudio Environment Variable in the Container
+
+```bash
+echo $PULSE_SERVER
+```
+
+---
+
+### 6. Test Microphone Input from Host Inside Container
+
+You can capture 5 seconds of audio from the host’s microphone and save it inside the container using the following command:
+
+```bash
+parec --format=s16le --rate=44100 --channels=1 2>/dev/null \
+  | sox -t raw -r 44100 -e signed -b 16 -c 1 - output.wav trim 0 5
+```
+
+---
+
+## References
+
+* [ALSA or Pulseaudio sound in docker container](https://github.com/mviereck/x11docker/wiki/Container-sound:-ALSA-or-Pulseaudio)
+
+---
+
+## Appendix A: Change the Default Port of PulseAudio
+
+You can change the PulseAudio TCP port if necessary. For example, to use port `4714`:
+
+```bash
+pulseaudio --daemonize=no --log-level=debug \
+  --exit-idle-time=-1 \
+  --load="module-native-protocol-tcp port=4714 auth-ip-acl=127.0.0.1;172.16.0.0/12 auth-anonymous=1"
 ```
