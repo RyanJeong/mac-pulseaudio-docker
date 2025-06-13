@@ -89,6 +89,8 @@ echo $PULSE_SERVER
 
 ### 6. Test Microphone Input from Host Inside Container
 
+You can capture 5 seconds of audio from the host’s microphone and save it inside the container using the following command:
+
 ```bash
 parec --format=s16le --rate=44100 --channels=1 2>/dev/null \
   | sox -t raw -r 44100 -e signed -b 16 -c 1 - output.wav trim 0 5
