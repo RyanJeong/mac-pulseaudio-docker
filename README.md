@@ -40,7 +40,7 @@ done
 
 ---
 
-### 2. Open a New Terminal and Verify PulseAudio Is Running
+### 2. Open a New Terminal and Verify PulseAudio is Running
 
 ```bash
 lsof -i :4713
