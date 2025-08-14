@@ -9,7 +9,7 @@ RUN sed -i 's/kr.archive.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list &&
     sed -i 's/archive.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list && \
     sed -i 's/security.ubuntu.com/mirror.kakao.com/g' /etc/apt/sources.list
 
-# Package installation
+# Package installation (runtime + build deps for CPython)
 RUN apt-get update && \
     apt-get install -y \
     sudo \
@@ -39,9 +39,40 @@ RUN apt-get update && \
     python3.8-dev \
     python3-pip \
     openssh-server \
-    iproute2 && \
+    iproute2 \
+    # ---- CPython build dependencies ----
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libgdbm-dev \
+    libdb5.3-dev \
+    libbz2-dev \
+    libexpat1-dev \
+    liblzma-dev \
+    wget && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/*
+
+# Build and install multiple CPython versions via source (keeps system python intact)
+# Installs /usr/local/bin/python3.9, 3.10, 3.11, 3.12, 3.13
+RUN set -eux; \
+    mkdir -p /tmp/pybuild && cd /tmp/pybuild; \
+    for ver in 3.9.23 3.10.9 3.11.9 3.12.9 3.13.5; do \
+      wget -q https://www.python.org/ftp/python/${ver}/Python-${ver}.tgz; \
+      tar -xzf Python-${ver}.tgz; \
+      rm -f Python-${ver}.tgz; \
+      cd Python-${ver}; \
+      ./configure --enable-optimizations --with-ensurepip=install; \
+      make -j"$(nproc)"; \
+      make altinstall; \
+      cd ..; \
+      rm -rf Python-${ver}; \
+    done; \
+    cd /; rm -rf /tmp/pybuild
 
 # Ensure /etc/ssh exists and generate host keys (no overwrite if exists)
 RUN mkdir -p /etc/ssh && \
