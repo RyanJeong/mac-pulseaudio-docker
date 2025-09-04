@@ -34,10 +34,12 @@ RUN apt-get update && \
     portaudio19-dev \
     python3-pyaudio \
     libffi-dev \
-    python3-venv \
     python3.6-dev \
+    python3.6-venv \
     python3.7-dev \
+    python3.7-venv \
     python3.8-dev \
+    python3.8-venv \
     python3-pip \
     openssh-server \
     iproute2 \
